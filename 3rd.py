@@ -1,37 +1,48 @@
 import mysql.connector
+from geopy.distance import geodesic
+
 
 connection = mysql.connector.connect(
-    port=3306,
+    port= 3306,
     host='127.0.0.1',
     user="Yashmayaiqbal",
     password="yashmaya",
     database="flight_game",
-    autocommit=True)
+    autocommit=True
+)
 
 cursor = connection.cursor()
 
-# Ask user for area code
-area_code = input("Enter area code (e.g. FI): ").upper()
+# Ask user for ICAO codes
+icao1 = input("Enter first ICAO code: ").upper()
+icao2 = input("Enter second ICAO code: ").upper()
 
-# SQL query
+# SQL query to get coordinates
 sql = """
-SELECT type, COUNT(*)
+SELECT latitude_deg, longitude_deg
 FROM airport
-WHERE iso_country = %s
-GROUP BY type
-ORDER BY type
+WHERE ident = %s
 """
 
-cursor.execute(sql, (area_code,))
-results = cursor.fetchall()
+# Fetch first airport
+cursor.execute(sql, (icao1,))
+airport1 = cursor.fetchone()
 
-#Print results
-if results:
-    for row in results:
-        print(row[1], row[0])
+# Fetch second airport
+cursor.execute(sql, (icao2,))
+airport2 = cursor.fetchone()
+
+# Check if both airports exist
+if airport1 and airport2:
+    coord1 = (airport1[0], airport1[1])
+    coord2 = (airport2[0], airport2[1])
+
+    distance = geodesic(coord1, coord2).kilometers
+
+    print(f"Distance between {icao1} and {icao2}: {distance:.2f} km")
 else:
-    print("No airports found for this area code.")
+    print("One or both ICAO codes were not found.")
 
-#Close connection
+# Close connection
 cursor.close()
 connection.close()
