@@ -10,28 +10,28 @@ connection = mysql.connector.connect(
 
 cursor = connection.cursor()
 
-cursor = connection.cursor()
-
-# Ask user for ICAO code
-icao = input("Enter ICAO code: ").upper()
+# Ask user for area code
+area_code = input("Enter area code (e.g. FI): ").upper()
 
 # SQL query
 sql = """
-SELECT name, municipality
+SELECT type, COUNT(*)
 FROM airport
-WHERE ident = %s
+WHERE iso_country = %s
+GROUP BY type
+ORDER BY type
 """
 
-cursor.execute(sql, (icao,))
-result = cursor.fetchone()
+cursor.execute(sql, (area_code,))
+results = cursor.fetchall()
 
-# Print result
-if result:
-    print("Airport name:", result[0])
-    print("Location (town):", result[1])
+#Print results
+if results:
+    for row in results:
+        print(row[1], row[0])
 else:
-    print("No airport found with this ICAO code.")
+    print("No airports found for this area code.")
 
-# Close connection
+#Close connection
 cursor.close()
 connection.close()
